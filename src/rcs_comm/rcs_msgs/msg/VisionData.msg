@@ -1,0 +1,10 @@
+std_msgs/Header header
+bool available
+string object_id
+float32 confidence
+float32 pixel_x
+float32 pixel_y
+float32 position_x
+float32 position_y
+float32 position_z
+string frame_id

@@ -1,0 +1,30 @@
+# ROS2 / colcon 构建产物
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+.pytest_cache/
+.coverage
+
+# MCU 工程（仅供 AI 参考，不入库）
+MCU Code/
+
+# IDE / 编辑器
+.vscode/
+.idea/
+*.swp
+*~
+*.code-workspace
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 虚拟环境
+.venv/
+venv/

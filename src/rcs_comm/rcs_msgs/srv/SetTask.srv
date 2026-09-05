@@ -1,0 +1,6 @@
+string task_name
+uint8 task_id
+bool start_immediately
+---
+bool accepted
+string message

@@ -1,0 +1,10 @@
+std_msgs/Header header
+bool chassis_ready
+bool arm_ready
+bool action_done
+bool emergency_stop
+bool fault
+uint8 current_action
+int32 error_code
+float32 battery_voltage
+uint32 acknowledged_sequence
