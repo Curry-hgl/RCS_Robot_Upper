@@ -4,10 +4,7 @@
   <description>RCS competition task definitions and configuration.</description>
   <maintainer email="rcs@example.com">RCS Team</maintainer><license>Apache-2.0</license>
   <buildtool_depend>ament_python</buildtool_depend><depend>rclpy</depend>
-<<<<<<< HEAD
-=======
   <exec_depend>rcs_msgs</exec_depend>
   <exec_depend>rcs_fsm</exec_depend><exec_depend>rcs_action</exec_depend>
->>>>>>> c3d5228 (FSM与msg初步移植)
   <export><build_type>ament_python</build_type></export>
 </package>

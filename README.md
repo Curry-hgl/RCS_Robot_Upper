@@ -7,15 +7,10 @@ RCS 特色上位机框架，对齐队内下位机模板的 RCS 体系。上位�
 ```
 RCS_Robot/src/
 ├── rcs_decision/          # ── 决策层：决定"现在做什么"
-│   ├── rcs_task/          #   赛题任务包（目标定义、场地坐标、任务参数）
+│   ├── rcs_task/          #   比赛流程、状态注册与决策、任务参数
 │   ├── rcs_fsm/           #   决策机A：状态机（主流程）
-<<<<<<< HEAD
-│   │   └── rcsm/          #   自研协程引擎（wait_event/wait_any/post_event）
-│   ├── rcs_bt/            #   决策机B：行为树（复杂分支/随机应变）
-=======
 │   │   └── rcs_fsm/       #   Lite 风格周期内核（无 ROS 依赖）
 │   ├── rcs_bt/            #   行为树预留，当前不使用
->>>>>>> c3d5228 (FSM与msg初步移植)
 │   │   └── rcsbt/         #   自研引擎（blackboard + executor + 节点原语）
 │   └── rcs_action/        #   动作原语（直行/抬升/抓取/释放，指令经 comm 下发）
 │
@@ -25,8 +20,8 @@ RCS_Robot/src/
 │   └── rcs_navigation/    #   导航（全局规划 + 局部避障，调 nav2）
 │
 ├── rcs_comm/              # ── 通信层：上下位机可靠传数据
-│   ├── rcs_msgs/          #   上下位机消息定义（msg/srv）
-│   ├── rcs_ptl/           #   通信协议（RDLC 队内自研 / easy_protocol 简易定长）
+│   ├── rcs_msgs/          #   业务消息定义、编号注册、payload 编解码
+│   ├── rcs_ptl/           #   通信协议（RDLC 封帧、拆帧、校验）
 │   └── rcs_serial/        #   串口收发驱动（pyserial + serial_bridge 多话题桥接）
 │
 └── rcs_tools/             # ── 工具层：辅助开发/调试/仿真（不参与运行）
@@ -41,39 +36,31 @@ RCS_Robot/src/
 
 | 上位机包 | 职责 | 对齐下位机 |
 |---|---|---|
-| `rcs_task` | 赛题目标定义 | 任务流程 |
+| `rcs_task` | 比赛流程与决策 | 任务流程 |
 | `rcs_fsm` | 主流程状态机 | `FSM_Lite.c` |
 | `rcs_bt` | 复杂分支行为树 | `Behavior_Tree.c` |
 | `rcs_action` | 动作原语 | `Up_Ctrl.c` / `Ch_Ctrl.c` |
 | `rcs_vision` | 视觉识别输出 | `Vision.c` |
-| `rcs_ptl` | 通信协议（RDLC / easy_protocol） | `rdlc.h` / `RCS_Ptl.h` |
+| `rcs_ptl` | RDLC 帧编解码与校验 | `rdlc.h` / `RCS_Ptl.h` |
 | `rcs_serial` | 串口收发 | `rcs_uart.h` |
 
-<<<<<<< HEAD
-## 决策层分工（FSM 与 BT）
-
-```
-rcs_task (目标) ─▶ rcs_fsm (主流程) ─┬─ 简单状态 → rcs_action
-                                     └─ 复杂分支 → rcs_bt ─→ rcs_action
-```
-
-- **FSM**：控整体阶段（开场 → 取放 → 救援 → 复位），状态线固定、可预期。
-- **BT**：在 FSM 某状态里处理"无固定规则的决策"（实时选点、按障碍/时间换行为）。
-- **共同点**：都只做"选动作"，最终执行都落在 `rcs_action`，不重复造轮子。
-=======
 ## 决策层分工
 
 `rcs_fsm` 提供 Lite 风格内核；`rcs_task` 注册状态、实现比赛决策；`rcs_action` 实现非阻塞功能函数。BT 暂不引入。已有模拟动作示例与 ROS 定时器入口，见 [框架说明](src/rcs_decision/FRAMEWORK.md)。
->>>>>>> c3d5228 (FSM与msg初步移植)
 
-## 数据流（单条主线）
+## 数据流
 
+```text
+rcs_task → rcs_action → ROS 业务消息 → rcs_serial 桥接
+                                      ↓
+                               rcs_msgs 编解码 payload
+                                      ↓
+                               rcs_ptl RDLC 帧编解码
+                                      ↓
+                               串口驱动 ↔ 下位机
 ```
-rcs_vision ─(VisionData)─▶ rcs_decision ─(ChassisCmd/ArmCmd)─▶ rcs_ptl ─▶ rcs_serial
-  感知层                   FSM/BT 选 action                   打包        (串口下发)
-rcs_decision ◀─(SensorState)─ rcs_ptl ◀─ rcs_serial ◀───────────────┘
-  状态迁移/条件判断             解包
-```
+
+动作反馈沿反向链路返回，按请求编号更新动作状态，由任务决定下一状态。业务格式见 [业务协议](src/rcs_comm/rcs_msgs/BUSINESS.md)。
 
 ## 依赖安装
 
@@ -100,7 +87,7 @@ colcon build --symlink-install
 source install/setup.bash
 
 ros2 run rcs_serial rdlc_serial_test --port /dev/ttyUSB0   # 串口回环测试
-ros2 run rcs_serial serial_bridge -p port:=/dev/ttyUSB0    # 多话题桥接节点
+ros2 run rcs_serial serial_bridge --ros-args -p port:=/dev/ttyUSB0    # 多话题桥接节点
 ```
 
 > 串口访问需加入 `dialout` 组：`sudo usermod -aG dialout $USER` 后重新登录。
