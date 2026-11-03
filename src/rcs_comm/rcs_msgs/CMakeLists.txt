@@ -6,6 +6,12 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/GcsDetection.msg"
+  "msg/GcsDetections.msg"
+  "msg/GcsTaskCode.msg"
+  "msg/GcsMode.msg"
+  "msg/GcsGripperEvent.msg"
+  "msg/GcsStatus.msg"
   "msg/ActionCommand.msg"
   "msg/ActionFeedback.msg"
   "msg/ChassisCmd.msg"

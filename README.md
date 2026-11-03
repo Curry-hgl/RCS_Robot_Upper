@@ -46,7 +46,7 @@ RCS_Robot/src/
 
 ## 决策层分工
 
-`rcs_fsm` 提供 Lite 风格内核；`rcs_task` 注册状态、实现比赛决策；`rcs_action` 实现非阻塞功能函数。BT 暂不引入。已有模拟动作示例与 ROS 定时器入口，见 [框架说明](src/rcs_decision/FRAMEWORK.md)。
+`rcs_fsm` 提供 Lite 风格内核；`rcs_task` 注册状态、实现比赛决策；`rcs_action` 实现非阻塞功能函数。BT 暂不引入。提供模拟动作示例与 ROS 定时器入口，运行方法见下文。
 
 ## 数据流
 
@@ -60,7 +60,7 @@ rcs_task → rcs_action → ROS 业务消息 → rcs_serial 桥接
                                串口驱动 ↔ 下位机
 ```
 
-动作反馈沿反向链路返回，按请求编号更新动作状态，由任务决定下一状态。业务格式见 [业务协议](src/rcs_comm/rcs_msgs/BUSINESS.md)。
+动作反馈沿反向链路返回，按请求编号更新动作状态，由任务决定下一状态。业务格式和编号注册集中在 `rcs_msgs/business/`。
 
 ## 依赖安装
 
@@ -78,6 +78,10 @@ rcs_task → rcs_action → ROS 业务消息 → rcs_serial 桥接
 | 视觉库（OpenCV/PyTorch/YOLO） | 目标检测（rcs_vision） | 按算法选装 |
 | 点云库（PCL/livox_ros_driver2） | 定位/导航（用雷达时） | 按需安装 |
 
+## 工创赛视觉
+
+已移植物块/黑环识别、二维码任务流程和抓放统计，沿用工创消息编号。默认主相机 `/dev/video20`，二维码相机 `0`，分辨率 640×480。
+
 ## 构建与运行
 
 ```bash
@@ -91,4 +95,78 @@ ros2 run rcs_serial serial_bridge --ros-args -p port:=/dev/ttyUSB0    # 多话�
 ```
 
 > 串口访问需加入 `dialout` 组：`sudo usermod -aG dialout $USER` 后重新登录。
-> 多话题桥接协议约定见 `src/rcs_comm/rcs_serial/BRIDGE.md`。
+
+
+### 工创赛启动
+
+构建并 source 后，一键启动视觉、任务和串口桥接：
+
+```bash
+ros2 launch rcs_task gcs.launch.py
+```
+
+常用配置：
+
+```bash
+# 单相机，不扫描二维码
+ros2 launch rcs_task gcs.launch.py block_camera:=0 qr_enabled:=false
+
+# 打开检测预览和任务状态大屏，需要桌面环境
+ros2 launch rcs_task gcs.launch.py preview:=true monitor:=true fullscreen:=true
+
+# 修改串口、相机和发送周期
+ros2 launch rcs_task gcs.launch.py port:=/dev/ttyUSB0 block_camera:=/dev/video20 qr_camera:=0 send_interval:=0.5 qr_send_duration:=5.0
+
+# 使用原 WeChat 二维码后端
+ros2 launch rcs_task gcs.launch.py qr_backend:=wechat qr_model_dir:=/实际模型目录
+```
+
+默认二维码后端为 OpenCV，无需模型。WeChat 后端需要带 `wechat_qrcode` 的 OpenCV，以及目录中的 `detect.prototxt`、`detect.caffemodel`、`sr.prototxt`、`sr.caffemodel`。
+
+二维码连续三帧确认后立即发送，并默认广播 5 秒；物块/黑环结果默认每 0.5 秒发送一次。`initial_mode:=0` 为物块，`initial_mode:=1` 为黑环，下位机可以覆盖模式。
+
+状态窗口按键：`m` 切换识别模式，`1/3` 增减抓取计数，`2/4` 增减放置计数，`f` 切换全屏，`ESC` 关闭显示。关闭显示不影响任务和通信。
+
+需要分别运行时，在各终端 source 工作空间：
+
+```bash
+ros2 run rcs_serial serial_bridge --ros-args -p port:=/dev/ttyUSB0
+ros2 run rcs_task gcs_task
+ros2 run rcs_vision gcs_vision
+ros2 run rcs_debug gcs_monitor
+```
+
+视觉半径、圆度、填充率等参数在 `rcs_vision/node.py` 声明，单独运行视觉节点时用 `--ros-args -p 参数名:=值` 配置。
+
+工创协议占用 `0x01～0x05`，底盘编号改为 `0x20`，通用三维视觉改为 `0x21`。工创空检测帧会发送数量 0，下位机应据此清除旧目标。
+
+为兼容原工创程序，RDLC 默认不开启转义；当前非转义解码遇到载荷中的 C0/0C 会影响收帧。两端都支持时，通过 `escape_enabled:=true` 同时启用，不能只改上位机。
+
+### FSM 示例
+
+```bash
+# 纯模拟流程，打印结果后退出
+ros2 run rcs_task fsm_example
+
+# ROS 定时器驱动的模拟动作
+ros2 run rcs_task task_example --ros-args -p tick_period:=0.05
+
+# 真实通信示例：下位机必须实现动作码 1（升降），高度单位米
+ros2 run rcs_task task_example --ros-args -p simulate:=false -p target_height:=0.1
+```
+
+真实动作示例需要先启动串口桥接，不适用于尚未实现该动作协议的工创旧固件。
+
+### 无硬件验证
+
+安装并 source 后运行：
+
+```bash
+python3 -m unittest discover -s src/rcs_decision/rcs_task/test -v
+python3 -m unittest discover -s src/rcs_perception/rcs_vision/test -v
+python3 -m unittest discover -s src/rcs_comm/rcs_ptl/test -v
+python3 src/rcs_comm/rcs_serial/test/integration_gcs_link.py
+python3 src/rcs_comm/rcs_serial/test/integration_action_link.py
+```
+
+伪串口测试不需要相机或下位机；真实相机驱动、光照标定、二维码实拍识别效果和下位机固件仍需实机联调。

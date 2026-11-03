@@ -1,4 +1,4 @@
-"""Replaceable task example; no competition or hardware assumptions."""
+"""可替换的最小任务示例：等待启动→动作执行→完成，失败进入 ERROR。"""
 from enum import Enum, auto
 from rcs_action import Action, SimulatedAction, Status
 from rcs_fsm import Event, Machine
@@ -34,6 +34,7 @@ class ExampleTask:
         return Event.FINISH if self._requested else Event.NONE
 
     def _execute(self):
+        """首次进入只启动一次，后续周期轮询动作结果。"""
         if not self._started:
             self.action.start()
             self._started = True
@@ -45,6 +46,7 @@ class ExampleTask:
         return Event.NONE
 
     def tick(self):
+        """先执行内核，再按任务策略处理失败，下一周期跳转。"""
         event = self.machine.tick()
         # Task policy, deliberately outside the reusable FSM kernel.
         if event == Event.FAILED:
@@ -52,6 +54,7 @@ class ExampleTask:
         return event
 
     def reset(self):
+        """请求取消已启动动作并回到待机；真实硬件重新启动前需确认已停止。"""
         if self._started:
             self.action.cancel()
         self._requested = False

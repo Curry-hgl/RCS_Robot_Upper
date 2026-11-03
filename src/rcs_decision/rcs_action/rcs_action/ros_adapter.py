@@ -1,4 +1,4 @@
-"""ROS transport for RemoteAction; business packing stays in rcs_msgs."""
+"""远程动作的 ROS 适配：仅映射消息字段，字节编码统一归 rcs_msgs。"""
 from rcs_msgs.msg import ActionCommand, ActionFeedback
 from .remote import RemoteAction
 

@@ -1,4 +1,7 @@
-"""ROS/serial adapter. Business formats and registry are owned by rcs_msgs."""
+"""ROS 与串口桥接：订阅业务消息，经 msgs 编码交给 RDLC；回帧解码后发布。
+
+串口读取线程仅收字节，业务处理在 ROS 执行器中完成；不包含赛题决策。
+"""
 from queue import Empty
 
 import rclpy
@@ -7,6 +10,8 @@ from rcs_msgs.msg import ActionCommand, ActionFeedback, ChassisCmd, VisionData
 from rcs_msgs.business import (
     ACTION_COMMAND, ACTION_FEEDBACK, CHASSIS, VISION, default_registry,
 )
+from rcs_msgs.msg import GcsDetections, GcsTaskCode, GcsMode, GcsGripperEvent
+from rcs_msgs.business.gcs import BLOCKS, RINGS, TASK_CODE, MODE, GRIPPER
 from .config import SerialConfig
 from .rdlc_link import RdlcSerialLink
 
@@ -21,8 +26,13 @@ class SerialBridge(Node):
             port=port, baudrate=baud, escape_enabled=escape))
         self.registry = default_registry()
         self.feedback_pub = self.create_publisher(ActionFeedback, "/action/feedback", 10)
+        self.mode_pub = self.create_publisher(GcsMode, "/gcs/mode_command", 10)
+        self.gripper_pub = self.create_publisher(GcsGripperEvent, "/gcs/gripper_event", 10)
         self._route_subscriptions = []
         for topic, kind, identifier in (
+            ("/gcs/blocks", GcsDetections, BLOCKS),
+            ("/gcs/rings", GcsDetections, RINGS),
+            ("/gcs/task_code/send", GcsTaskCode, TASK_CODE),
             ("/action/command", ActionCommand, ACTION_COMMAND),
             ("/cmd/chassis", ChassisCmd, CHASSIS),
             ("/vision/object", VisionData, VISION),
@@ -49,7 +59,19 @@ class SerialBridge(Node):
                     or frame.src != self.link.config.remote_address):
                 continue
             try:
-                if not frame.payload or frame.payload[0] != ACTION_FEEDBACK:
+                if not frame.payload:
+                    continue
+                identifier = frame.payload[0]
+                if identifier == MODE:
+                    mode = self.registry.decode(frame.payload)
+                    self.mode_pub.publish(GcsMode(mode=mode.mode))
+                    continue
+                if identifier == GRIPPER:
+                    event = self.registry.decode(frame.payload)
+                    self.gripper_pub.publish(GcsGripperEvent(
+                        action=event.action, pick=event.pick, place=event.place))
+                    continue
+                if identifier != ACTION_FEEDBACK:
                     continue
                 feedback = self.registry.decode(frame.payload)
                 msg = ActionFeedback()

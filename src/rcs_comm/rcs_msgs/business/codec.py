@@ -1,9 +1,9 @@
-"""Little-endian business payload registry; RDLC framing belongs to rcs_ptl."""
+"""业务消息注册及小端编码：只生成 payload，RDLC 封帧属于 rcs_ptl。"""
 import struct
 from dataclasses import dataclass
 
-VISION = 0x01
-CHASSIS = 0x02
+VISION = 0x21  # 通用三维视觉；0x01 留给工创批量物块
+CHASSIS = 0x20  # 底盘控制；0x02 留给工创黑环
 ACTION_COMMAND = 0x10
 ACTION_FEEDBACK = 0x11
 # Version 1: reject incompatible peers rather than silently reinterpret fields.
@@ -73,6 +73,7 @@ class Registry:
         self._decoders = {}
 
     def register(self, message_id, encoder, decoder=None):
+        """绑定唯一编号和收发函数；只接收的业务可不提供 encoder。"""
         if message_id in self._encoders:
             raise ValueError("Duplicate message ID")
         self._encoders[message_id] = encoder
@@ -80,7 +81,10 @@ class Registry:
             self._decoders[message_id] = decoder
 
     def encode(self, message_id, msg):
-        return self._encoders[message_id](msg)
+        encoder = self._encoders[message_id]
+        if encoder is None:
+            raise ValueError("Receive-only message")
+        return encoder(msg)
 
     def decode(self, raw):
         if not raw or raw[0] not in self._decoders:
@@ -89,6 +93,7 @@ class Registry:
 
 
 def default_registry():
+    """唯一业务注册入口；年度新增消息在此组合，驱动不实现组包。"""
     registry = Registry()
     registry.register(ACTION_COMMAND, encode_command, decode_command)
     registry.register(ACTION_FEEDBACK, encode_feedback, decode_feedback)
@@ -97,6 +102,8 @@ def default_registry():
     registry.register(VISION, lambda m: bytes((VISION,)) + struct.pack(
         "<Bfff", {"block": 1, "cylinder": 2}.get(m.object_id, 0),
         m.position_x, m.position_y, m.position_z))
+    from .gcs import register_gcs
+    register_gcs(registry)
     return registry
 
 

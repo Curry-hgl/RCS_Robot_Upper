@@ -1,4 +1,4 @@
-"""Nonblocking action lifecycle, independent of task flow and FSM events."""
+"""非阻塞动作契约：启动、查询、取消；动作结果由任务映射为 FSM 事件。"""
 from enum import Enum, auto
 from typing import Protocol
 
@@ -33,10 +33,12 @@ class SimulatedAction:
         self._status = None
 
     def start(self):
+        """开始一次模拟动作，重置完成计数。"""
         self._remaining = self._polls
         self._status = Status.RUNNING
 
     def poll(self):
+        """立即返回结果，不阻塞执行器；真实实现应读取下位机反馈。"""
         if self._status is None:
             raise RuntimeError("Action has not been started")
         if self._status == Status.RUNNING:
