@@ -1,0 +1,10 @@
+uint8 ACCEPTED=0
+uint8 RUNNING=1
+uint8 SUCCEEDED=2
+uint8 FAILED=3
+uint8 CANCELLED=4
+uint32 request_id
+uint16 action_code
+uint8 status
+uint16 error_code
+uint8[] data

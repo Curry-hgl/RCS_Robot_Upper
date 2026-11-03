@@ -9,8 +9,13 @@ RCS_Robot/src/
 ├── rcs_decision/          # ── 决策层：决定"现在做什么"
 │   ├── rcs_task/          #   赛题任务包（目标定义、场地坐标、任务参数）
 │   ├── rcs_fsm/           #   决策机A：状态机（主流程）
+<<<<<<< HEAD
 │   │   └── rcsm/          #   自研协程引擎（wait_event/wait_any/post_event）
 │   ├── rcs_bt/            #   决策机B：行为树（复杂分支/随机应变）
+=======
+│   │   └── rcs_fsm/       #   Lite 风格周期内核（无 ROS 依赖）
+│   ├── rcs_bt/            #   行为树预留，当前不使用
+>>>>>>> c3d5228 (FSM与msg初步移植)
 │   │   └── rcsbt/         #   自研引擎（blackboard + executor + 节点原语）
 │   └── rcs_action/        #   动作原语（直行/抬升/抓取/释放，指令经 comm 下发）
 │
@@ -44,6 +49,7 @@ RCS_Robot/src/
 | `rcs_ptl` | 通信协议（RDLC / easy_protocol） | `rdlc.h` / `RCS_Ptl.h` |
 | `rcs_serial` | 串口收发 | `rcs_uart.h` |
 
+<<<<<<< HEAD
 ## 决策层分工（FSM 与 BT）
 
 ```
@@ -54,6 +60,11 @@ rcs_task (目标) ─▶ rcs_fsm (主流程) ─┬─ 简单状态 → rcs_acti
 - **FSM**：控整体阶段（开场 → 取放 → 救援 → 复位），状态线固定、可预期。
 - **BT**：在 FSM 某状态里处理"无固定规则的决策"（实时选点、按障碍/时间换行为）。
 - **共同点**：都只做"选动作"，最终执行都落在 `rcs_action`，不重复造轮子。
+=======
+## 决策层分工
+
+`rcs_fsm` 提供 Lite 风格内核；`rcs_task` 注册状态、实现比赛决策；`rcs_action` 实现非阻塞功能函数。BT 暂不引入。已有模拟动作示例与 ROS 定时器入口，见 [框架说明](src/rcs_decision/FRAMEWORK.md)。
+>>>>>>> c3d5228 (FSM与msg初步移植)
 
 ## 数据流（单条主线）
 
