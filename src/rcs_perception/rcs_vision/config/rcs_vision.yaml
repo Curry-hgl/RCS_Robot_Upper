@@ -1,0 +1,30 @@
+# 相机：路径或字符串编号 '0'；两项相同时共享设备
+block_camera: /dev/video0  # 物块/黑环
+qr_camera: /dev/video20             # 二维码
+width: 640                 # 请求宽度，px
+height: 480                # 请求高度，px
+process_period: 0.05       # 处理周期，s，>0
+initial_mode: 0            # 0=物块，1=黑环；可由任务切换
+
+# 二维码
+qr_enabled: false
+qr_backend: opencv        # opencv（无模型）/ wechat（需 wechat_qrcode）
+# 仅 wechat：需 detect.prototxt、detect.caffemodel、sr.prototxt、sr.caffemodel
+qr_model_dir: ~/.opencv/wechat_qrcode
+
+# 预览：需桌面环境
+preview: false           # 物块/黑环画面
+qr_preview: false        # 二维码画面；确认后关闭
+
+# 物块检测
+block_min_radius: 20      # 最小半径，px
+block_max_radius: 150     # 最大半径，px
+block_min_fill: 0.60      # 最小填充率，0~1
+block_min_circularity: 0.60  # 最小圆度，0~1
+block_min_aspect: 0.65    # 最小短边/长边比，0~1
+
+# 黑环检测
+ring_min_radius: 20      # 最小半径，px
+ring_max_radius: 200     # 最大半径，px
+ring_min_area: 500       # 环带内最小黑色面积，px²
+ring_param2: 0.9         # 圆质量阈值，0~1；越高越严格

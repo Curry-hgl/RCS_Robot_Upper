@@ -1,4 +1,4 @@
 """Public, ROS-independent FSM API."""
-from .core import Event, Machine
+from .rcs_fsm_core import Event, Machine
 
 __all__ = ["Event", "Machine"]

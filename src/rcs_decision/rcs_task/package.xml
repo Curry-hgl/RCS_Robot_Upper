@@ -6,8 +6,10 @@
   <buildtool_depend>ament_python</buildtool_depend><depend>rclpy</depend>
   <exec_depend>rcs_msgs</exec_depend>
   <exec_depend>rcs_fsm</exec_depend><exec_depend>rcs_action</exec_depend>
+  <exec_depend>ament_index_python</exec_depend><exec_depend>python3-yaml</exec_depend>
   <exec_depend>launch</exec_depend><exec_depend>launch_ros</exec_depend>
   <exec_depend>rcs_vision</exec_depend><exec_depend>rcs_serial</exec_depend><exec_depend>rcs_debug</exec_depend>
-  <test_depend>rcs_ptl</test_depend>
+  <exec_depend>rcs_ptl</exec_depend>
+  <exec_depend>python3-pytest</exec_depend>
   <export><build_type>ament_python</build_type></export>
 </package>

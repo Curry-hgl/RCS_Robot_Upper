@@ -1,11 +1,12 @@
 import unittest
 from rcs_msgs.business import (Command, Feedback, encode_command, decode_command,
-                               encode_feedback, decode_feedback, lift_parameters)
-from rcs_action.remote import RemoteAction
+                               encode_feedback, decode_feedback)
+from example_task import lift_parameters
+from rcs_action.rcs_action_remote import RemoteAction
 from rcs_action import Status
 from rcs_fsm import Event
-from rcs_task.example import ExampleTask, State
-from rcs_ptl import RdlcCodec
+from example_task import ExampleTask, State
+from rcs_ptl import FrameCodec
 
 
 class BusinessTests(unittest.TestCase):
@@ -23,7 +24,7 @@ class BusinessTests(unittest.TestCase):
 
     def test_task_to_rdlc_and_back(self):
         outbound = []
-        codec = RdlcCodec(escape_enabled=True)
+        codec = FrameCodec(escape_enabled=True)
         action = RemoteAction(lambda c: outbound.append(codec.encode(
             1, 2, encode_command(c))), 1, bytes((0xc0, 0x0c, 0xff)))
         task = ExampleTask(action)

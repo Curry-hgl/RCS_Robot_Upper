@@ -1,6 +1,6 @@
 """Serial transport interfaces."""
 
-from .config import SerialConfig
-from .rdlc_link import RdlcSerialLink
+from .rcs_serial_config import SerialConfig
+from .rcs_serial_link import SerialLink
 
-__all__ = ["SerialConfig", "RdlcSerialLink"]
+__all__ = ["SerialConfig", "SerialLink"]

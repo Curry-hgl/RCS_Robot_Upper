@@ -1,0 +1,17 @@
+vision_config: ''         # 留空使用 rcs_vision.yaml；支持相对路径
+tick_period: 0.05         # 任务周期，s
+
+# 串口
+serial_enabled: true
+port: /dev/ttyUSB0
+baudrate: 115200
+escape_enabled: false     # 须与下位机一致
+
+# 视觉结果发送
+qr_confirm_frames: 3      # 连续相同帧数，>=1
+qr_send_duration: 5.0     # 广播时长，s；0=仅发一次
+send_interval: 0.5       # 发送间隔，s，>0
+
+# 状态窗口：需桌面环境
+monitor: true
+fullscreen: false

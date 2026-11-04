@@ -1,7 +1,7 @@
 import unittest
 from rcs_fsm import Event, Machine
 from rcs_action import SimulatedAction, Status
-from rcs_task.example import ExampleTask, State
+from example_task import ExampleTask, State
 
 
 class CountingAction(SimulatedAction):

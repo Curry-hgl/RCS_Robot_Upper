@@ -1,4 +1,4 @@
 """Reusable action interfaces and simulation."""
-from .actions import Action, SimulatedAction, Status
+from .rcs_action_base import Action, SimulatedAction, Status
 
 __all__ = ["Action", "SimulatedAction", "Status"]
