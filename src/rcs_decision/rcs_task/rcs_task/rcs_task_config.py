@@ -58,7 +58,10 @@ def load_task_config(name, path=None, *, vision_config=None):
         merged.update(config)
         merged['vision_config'] = str(vision_path.resolve())
         config = merged
-    for key in ('serial_enabled', 'monitor', 'fullscreen'):
+    if config.get('imu_config'):
+        imu_path = Path(config['imu_config']).expanduser()
+        config['imu_config'] = str((imu_path if imu_path.is_absolute() else path.parent / imu_path).resolve())
+    for key in ('serial_enabled', 'monitor', 'fullscreen', 'imu_enabled'):
         if key in config and type(config[key]) is not bool:
             raise ValueError(f'{key} must be true or false')
     config['tasks'] = [name]

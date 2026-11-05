@@ -55,8 +55,12 @@ class LaunchTests(unittest.TestCase):
 
     def test_combination_includes_children_and_reuses_serial(self):
         for tasks in [('upper',), ('chassis',), ('upper', 'vision'), ('upper', 'chassis', 'vision')]:
-            with self.subTest(tasks=tasks):
-                result, nodes = self.expand(system_launch(tasks=tasks))
+            with self.subTest(tasks=tasks), tempfile.TemporaryDirectory() as folder:
+                profiles = {name: {'serial_enabled': True, 'port': '/dev/test_bus',
+                                   'baudrate': 115200, 'escape_enabled': False}
+                            for name in tasks}
+                system, _ = self.profiles(Path(folder), tasks, **profiles)
+                result, nodes = self.expand(system_launch(config=system))
                 self.assertEqual(result, 0)
                 self.assertEqual(sum(n['executable'] == 'serial_bridge' for n in nodes), 1)
                 task_nodes = [n for n in nodes if n['executable'] == 'rcs_task_node']
@@ -119,3 +123,24 @@ class LaunchTests(unittest.TestCase):
             self.assertEqual(main(['upper', 'vision']), 7)
             launch.return_value.include_launch_description.assert_called_once()
             launch.return_value.run.assert_called_once()
+
+    def test_chassis_can_include_imu_once(self):
+        with tempfile.TemporaryDirectory() as d:
+            system, _ = self.profiles(Path(d), ('upper', 'chassis'),
+                                      upper={'serial_enabled': False},
+                                      chassis={'serial_enabled': False, 'imu_enabled': True})
+            result, nodes = self.expand(system_launch(config=system))
+            self.assertEqual(result, 0)
+            self.assertEqual(sum(n['executable'] == 'rcs_imu_node' for n in nodes), 1)
+
+    def test_imu_serial_conflict_fails_before_any_process(self):
+        with tempfile.TemporaryDirectory() as d:
+            imu = Path(d) / 'imu.yaml'
+            imu.write_text(yaml.safe_dump({'rcs_imu': {'ros__parameters': {'port': '/dev/test_bus'}}}))
+            system, _ = self.profiles(Path(d), ('upper', 'chassis'),
+                                      upper={'port': '/dev/test_bus'},
+                                      chassis={'serial_enabled': False, 'imu_enabled': True,
+                                               'imu_config': 'imu.yaml'})
+            result, nodes = self.expand(system_launch(config=system))
+            self.assertNotEqual(result, 0)
+            self.assertEqual(nodes, [])

@@ -3,7 +3,7 @@ tick_period: 0.05         # 任务周期，s
 
 # 串口
 serial_enabled: true
-port: /dev/ttyUSB0
+port: /dev/ttyS1  #ttyUSB0
 baudrate: 115200
 escape_enabled: false     # 须与下位机一致
 

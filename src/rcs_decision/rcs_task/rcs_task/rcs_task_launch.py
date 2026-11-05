@@ -1,6 +1,8 @@
 """子任务启动与公共依赖复用。"""
 from pathlib import Path
 
+import yaml
+
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription, OpaqueFunction
@@ -52,6 +54,21 @@ def shared_resources(configs):
         if settings is not None and request != settings:
             raise ValueError('Selected tasks have conflicting shared serial settings')
         settings = request
+    for config in configs:
+        if not config.get('imu_enabled', False):
+            continue
+        path = config.get('imu_config') or str(
+            Path(get_package_share_directory('rcs_imu')) / 'config/rcs_imu.yaml')
+        with Path(path).open(encoding='utf-8') as stream:
+            imu = yaml.safe_load(stream)
+        try:
+            imu_port = imu['rcs_imu']['ros__parameters']['port']
+        except (KeyError, TypeError) as exc:
+            raise ValueError(f'Invalid IMU config: {path}') from exc
+        if not isinstance(imu_port, str) or not imu_port:
+            raise ValueError('IMU port must be a nonempty string')
+        if settings and Path(imu_port).resolve() == Path(settings['port']).resolve():
+            raise ValueError('IMU and lower-controller bridge cannot share a serial port')
     return [_serial_node(settings)] if settings is not None else []
 
 

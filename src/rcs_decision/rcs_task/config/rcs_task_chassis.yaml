@@ -5,3 +5,7 @@ serial_enabled: true
 port: /dev/ttyUSB0
 baudrate: 115200
 escape_enabled: false  # 须与下位机一致
+
+# IMU（独立串口）
+imu_enabled: false
+imu_config: ''  # 留空使用 rcs_imu.yaml

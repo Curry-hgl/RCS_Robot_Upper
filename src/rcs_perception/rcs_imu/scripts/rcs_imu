@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+"""读取默认配置并启动 IMU launch。"""
+import argparse
+from pathlib import Path
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription, LaunchService
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+
+
+def main():
+    parser = argparse.ArgumentParser(description='启动 IMU')
+    parser.add_argument('--config', help='IMU YAML 路径')
+    args = parser.parse_args()
+    share = Path(get_package_share_directory('rcs_imu'))
+    config = str(Path(args.config).expanduser().resolve()) if args.config else str(share / 'config/rcs_imu.yaml')
+    service = LaunchService()
+    service.include_launch_description(LaunchDescription([
+        IncludeLaunchDescription(PythonLaunchDescriptionSource(str(share / 'launch/rcs_imu.launch.py')),
+                                 launch_arguments={'imu_config': config}.items())
+    ]))
+    return service.run()
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

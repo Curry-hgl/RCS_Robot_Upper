@@ -13,7 +13,7 @@ qr_backend: opencv        # opencv（无模型）/ wechat（需 wechat_qrcode）
 qr_model_dir: ~/.opencv/wechat_qrcode
 
 # 预览：需桌面环境
-preview: false           # 物块/黑环画面
+preview: true           # 物块/黑环画面
 qr_preview: false        # 二维码画面；确认后关闭
 
 # 物块检测

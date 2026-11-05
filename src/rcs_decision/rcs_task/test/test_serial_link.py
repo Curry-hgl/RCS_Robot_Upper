@@ -67,9 +67,13 @@ def test_serial_link():
     rclpy.init()
     bridge = SerialBridge(SerialConfig(os.ttyname(slave), escape_enabled=True))
     bridge.open()
-    task = RcsTaskNode(tasks=['upper', 'vision'])
+    task = RcsTaskNode(tasks=['upper', 'vision'], config={
+        'qr_enabled': True, 'initial_mode': 0, 'send_interval': 0.05,
+        'qr_send_duration': 0.2, 'qr_confirm_frames': 3,
+    })
     with patch('rcs_vision.rcs_vision_node.Camera', SyntheticCamera), patch('rcs_vision.rcs_vision_node.QrDetector', SyntheticQr):
-        vision = RcsVision()
+        vision = RcsVision(config={'qr_enabled': True, 'initial_mode': 0,
+                                   'preview': False, 'qr_preview': False})
     executor = SingleThreadedExecutor()
     for node in (bridge, task, vision): executor.add_node(node)
     thread = threading.Thread(target=lower_board)

@@ -16,6 +16,7 @@ RCS_Robot/src/
 │
 ├── rcs_perception/        # ── 感知层：知道"我在哪、周围有什么"
 │   ├── rcs_vision/        #   视觉识别（对齐下位机 Vision.c 语义）
+│   ├── rcs_imu/           #   IMU 驱动、数据与校准接口
 │   ├── rcs_location/      #   定位（里程计/IMU/LiDAR 融合）
 │   └── rcs_navigation/    #   导航（全局规划 + 局部避障，调 nav2）
 │
@@ -89,6 +90,7 @@ ros2 run rcs_serial serial_bridge --ros-args -p port:=/dev/ttyUSB0    # 多话�
 ### RC 国赛启动
 
 ```bash
+ros2 run rcs_imu rcs_imu                 # 独立 IMU
 ros2 run rcs_task rcs_task vision        # 完整视觉流程
 ros2 run rcs_task rcs_task upper vision  # 组合任务，共享串口
 ros2 run rcs_task rcs_task               # 按总配置启动
@@ -96,11 +98,14 @@ ros2 run rcs_task rcs_task               # 按总配置启动
 
 | 配置 | 用途 |
 |---|---|
+| [`rcs_imu.yaml`](src/rcs_perception/rcs_imu/config/rcs_imu.yaml) | IMU 串口、安装方向、重连和调试输出 |
 | [`rcs_task.yaml`](src/rcs_decision/rcs_task/config/rcs_task.yaml) | 默认运行哪些任务 |
 | [`rcs_task_vision.yaml`](src/rcs_decision/rcs_task/config/rcs_task_vision.yaml) | 视觉任务的串口、显示、发送周期 |
 | [`rcs_vision.yaml`](src/rcs_perception/rcs_vision/config/rcs_vision.yaml) | 相机、识别模式、阈值、二维码及画面预览 |
 | [`rcs_task_upper.yaml`](src/rcs_decision/rcs_task/config/rcs_task_upper.yaml) | 上层任务周期、串口 |
 | [`rcs_task_chassis.yaml`](src/rcs_decision/rcs_task/config/rcs_task_chassis.yaml) | 底盘任务周期、串口 |
+
+底盘配置 `imu_enabled: true` 时包含 IMU launch；IMU 与下位机使用独立串口。IMU 标准数据为 `/rcs_imu/data`，校准和航向归零服务为 `/rcs_imu/calibrate_gyroscope`、`/rcs_imu/reset_heading`。
 
 各任务也有独立 launch，例如 `ros2 launch rcs_task rcs_task_vision.launch.py`；总入口为 `rcs_task.launch.py`。
 
@@ -115,6 +120,7 @@ ros2 run rcs_task rcs_task               # 按总配置启动
 ### 无硬件验证
 
 ```bash
+ros2 run rcs_imu test             # IMU 转换、launch、伪串口联调
 ros2 run rcs_ptl test             # 全部协议测试
 ros2 run rcs_ptl test frame       # 只测默认协议收发
 ros2 run rcs_ptl test protocol    # 只测协议切换
@@ -137,6 +143,7 @@ ros2 run rcs_vision test          # 视觉测试
 | 依赖 | 用途 | 安装 |
 |---|---|---|
 | ROS2 Desktop + 工具链 | 节点/话题/服务/消息、RViz、TF、colcon、rosdepc | 一键安装（见上） |
+| libudev 开发库 | LPMS 核心驱动构建 | `sudo apt install libudev-dev` |
 | pytest | `ros2 run` 测试入口的运行依赖 | `sudo apt install python3-pytest` |
 | pyserial | 上位机串口收发（rcs_serial） | `pip install pyserial` |
 | Navigation2 | 导航（rcs_navigation） | `sudo apt install ros-humble-navigation2` |

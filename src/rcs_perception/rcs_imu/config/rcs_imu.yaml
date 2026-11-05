@@ -1,0 +1,11 @@
+rcs_imu:
+  ros__parameters:
+    port: /dev/ttyS1
+    baudrate: 115200
+    frame_id: imu_link
+    rate: 200.0              # 读取队列频率，Hz；不改变传感器输出频率
+    autoreconnect: true
+    connection_timeout: 15.0 # 等待连接告警时间，s；重连开启时继续等待
+    mount_rpy: [0.0, 0.0, 0.0] # 传感器轴转到 frame_id 的旋转，rad
+    debug_enabled: true    # 发布欧拉角和角速度调试话题
+    debug_degrees: true     # 仅影响调试话题，标准 IMU 消息始终使用 SI 单位
