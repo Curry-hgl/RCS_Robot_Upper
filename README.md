@@ -17,7 +17,7 @@ RCS_Robot/src/
 ├── rcs_perception/        # ── 感知层：知道"我在哪、周围有什么"
 │   ├── rcs_vision/        #   视觉识别（对齐下位机 Vision.c 语义）
 │   ├── rcs_imu/           #   IMU 驱动、数据与校准接口
-│   ├── rcs_location/      #   定位（里程计/IMU/LiDAR 融合）
+│   ├── rcs_location/      #   定位算法与融合（当前 IMU 平面解算）
 │   └── rcs_navigation/    #   导航（全局规划 + 局部避障，调 nav2）
 │
 ├── rcs_comm/              # ── 通信层：上下位机可靠传数据
@@ -91,6 +91,7 @@ ros2 run rcs_serial serial_bridge --ros-args -p port:=/dev/ttyUSB0    # 多话�
 
 ```bash
 ros2 run rcs_imu rcs_imu                 # 独立 IMU
+ros2 run rcs_location rcs_location       # IMU 驱动与坐标解算
 ros2 run rcs_task rcs_task vision        # 完整视觉流程
 ros2 run rcs_task rcs_task upper vision  # 组合任务，共享串口
 ros2 run rcs_task rcs_task               # 按总配置启动
@@ -99,6 +100,8 @@ ros2 run rcs_task rcs_task               # 按总配置启动
 | 配置 | 用途 |
 |---|---|
 | [`rcs_imu.yaml`](src/rcs_perception/rcs_imu/config/rcs_imu.yaml) | IMU 串口、安装方向、重连和调试输出 |
+| [`rcs_location.yaml`](src/rcs_perception/rcs_location/config/rcs_location.yaml) | 定位入口、IMU 驱动开关 |
+| [`rcs_location_algorithm.yaml`](src/rcs_perception/rcs_location/config/rcs_location_algorithm.yaml) | IMU 解算、安装位置、初始化与噪声 |
 | [`rcs_task.yaml`](src/rcs_decision/rcs_task/config/rcs_task.yaml) | 默认运行哪些任务 |
 | [`rcs_task_vision.yaml`](src/rcs_decision/rcs_task/config/rcs_task_vision.yaml) | 视觉任务的串口、显示、发送周期 |
 | [`rcs_vision.yaml`](src/rcs_perception/rcs_vision/config/rcs_vision.yaml) | 相机、识别模式、阈值、二维码及画面预览 |
@@ -121,6 +124,7 @@ ros2 run rcs_task rcs_task               # 按总配置启动
 
 ```bash
 ros2 run rcs_imu test             # IMU 转换、launch、伪串口联调
+ros2 run rcs_location test        # IMU 轨迹、话题与归零测试
 ros2 run rcs_ptl test             # 全部协议测试
 ros2 run rcs_ptl test frame       # 只测默认协议收发
 ros2 run rcs_ptl test protocol    # 只测协议切换

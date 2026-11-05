@@ -23,6 +23,7 @@ class RcsImuNode : public rclcpp::Node {
     std::vector<rclcpp::Service<Trigger>::SharedPtr> services_;
     std::string frame_;
     tf2::Quaternion mount_;
+    bool quaternion_inverse_{false};
     bool reconnect_, degrees_, connected_ = false, reported_ = false;
     int last_status_ = -1;
     double timeout_;
@@ -101,7 +102,7 @@ class RcsImuNode : public rclcpp::Node {
         for (int i=0; i<256 && sensor_->getImuData(latest); ++i) received=true;
         if (!received) return;
         try {
-            auto message=rcs_imu::convert(latest, settings, mount_);
+            auto message=rcs_imu::convert(latest, settings, mount_, quaternion_inverse_);
             message.header.stamp=this->now();
             message.header.frame_id=frame_;
             publisher_->publish(message);
@@ -121,6 +122,7 @@ public:
         reconnect_=declare_parameter<bool>("autoreconnect",true);
         const bool debug_enabled=declare_parameter<bool>("debug_enabled",false);
         degrees_=declare_parameter<bool>("debug_degrees",true);
+        quaternion_inverse_=declare_parameter<bool>("quaternion_inverse",false);
         const auto rpy=declare_parameter<std::vector<double>>("mount_rpy",{0.0,0.0,0.0});
         if (port.empty() || baud<=0 || frame_.empty() || !std::isfinite(rate) || rate<=0 || rate>10000 ||
             !std::isfinite(timeout_) || timeout_<=0 || rpy.size()!=3)

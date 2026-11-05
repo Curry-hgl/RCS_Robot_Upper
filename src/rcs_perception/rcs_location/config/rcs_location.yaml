@@ -1,0 +1,4 @@
+# 总入口；单独运行 algorithm 不启动 IMU 驱动。
+imu_enabled: true
+imu_config: ''                     # 空：使用 rcs_imu 默认配置
+algorithm_config: ''               # 空：使用本包默认配置

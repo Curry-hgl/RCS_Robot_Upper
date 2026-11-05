@@ -10,19 +10,20 @@
 
 namespace rcs_imu {
 inline sensor_msgs::msg::Imu convert(const IG1ImuDataI &data, const IG1SettingsI &settings,
-                                    const tf2::Quaternion &mount) {
+                                    const tf2::Quaternion &mount, bool quaternion_inverse = false) {
     sensor_msgs::msg::Imu out;
     const auto flags = settings.transmitDataConfig;
     out.orientation_covariance[0] = -1;
     out.angular_velocity_covariance[0] = -1;
     out.linear_acceleration_covariance[0] = -1;
     if (flags & TDR_QUAT_OUTPUT_ENABLED) {
-        // LPMS 四元数为参考系到传感器系；ROS 使用相反方向。
-        tf2::Quaternion q(-data.quaternion.data[1], -data.quaternion.data[2],
-                          -data.quaternion.data[3], data.quaternion.data[0]);
+        // BE1 实测输出为传感器到世界；其他固件可显式切换方向。
+        tf2::Quaternion q(data.quaternion.data[1], data.quaternion.data[2],
+                          data.quaternion.data[3], data.quaternion.data[0]);
         if (!std::isfinite(q.length2()) || q.length2() < 1e-12)
             throw std::runtime_error("Invalid IMU quaternion");
         q.normalize();
+        if (quaternion_inverse) q = q.inverse();
         q *= mount.inverse();
         out.orientation.x=q.x(); out.orientation.y=q.y();
         out.orientation.z=q.z(); out.orientation.w=q.w();

@@ -1,0 +1,32 @@
+rcs_location_algorithm:
+  ros__parameters:
+    imu_topic: /rcs_imu/data
+    imu_frame: imu_link             # 轴向须与车体对齐；安装旋转在 rcs_imu.mount_rpy 配置
+    odom_topic: /rcs_location/algorithm/imu/odom
+    state_topic: /rcs_location/algorithm/imu/state
+    length_unit: cm                 # state 的位置/速度：m、cm、mm；odom/TF 固定 SI
+    state_precision: 2             # state 保留小数位：0～6；不影响解算精度
+    angle_unit: deg                 # state 的角度/角速度：deg、rad
+    odom_frame: odom                # 初始化位置为原点，初始朝向为 +X
+    body_frame: base_link
+    publish_tf: false               # 后续由融合层发布 TF
+    imu_position: [0.0, 0.0, 0.0]   # IMU 相对车体原点的 x/y/z，m
+    acceleration_sign: -1.0         # LPMS 当前输出取反；标准 ROS 比力用 1.0
+    gravity_magnitude: 9.80665      # 世界 Z 向上，重力补偿参考值，m/s²
+    calibration_seconds: 2.0        # 启动、归零时保持静止
+    calibration_samples: 100
+    stationary_gyro: 0.08           # 初始化角速度上限，rad/s
+    stationary_acceleration: 0.3    # 初始化世界系加速度变化上限，m/s²
+    max_dt: 0.1                    # 超时段不积分，速度清零
+    input_timeout: 1.0             # 无有效输入报警，s
+    deadband_enabled: true         # 重力补偿后抑制 XY 小加速度
+    acceleration_deadband: [0.1, 0.1] # XY 最小死区，m/s²；阈值外减去死区
+    deadband_sigma: 5.0             # 实际死区=max(最小值, 静止样本标准差×此系数)
+    zero_velocity_enabled: true     # 低动态持续后清零速度；也可能误判匀速
+    zero_velocity_seconds: 1.0      # 持续时间，s；需同时开启 deadband
+    zero_velocity_gyro: 0.03        # 角速度上限，rad/s
+    motion_confirm_seconds: 0.15   # 持续超阈值才退出清零，滤除短脉冲；0 为立即退出
+    acceleration_noise: 0.2        # 加速度噪声估计，m/s²
+    bias_noise: 0.02                # 残余零偏估计，m/s²
+    yaw_noise: 0.02                 # 航向标准差，rad
+    gyro_noise: 0.01                # 角速度标准差，rad/s
